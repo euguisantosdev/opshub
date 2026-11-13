@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Erro')}"></head>
+<body>
+<main class="login" id="conteudo">
+  <section class="card panel" style="text-align:center">
+    <div class="brand"><img th:src="@{/images/logo.svg}" alt="" width="34" height="34">OpsHub</div>
+    <h1 style="margin:10px 0" th:text="${status == 403} ? 'Acesso negado' : (${status == 404} ? 'Página não encontrada' : 'Algo deu errado')">Erro</h1>
+    <p class="muted" th:text="${status == 403} ? 'Seu perfil não tem permissão para esta área.' : (${status == 404} ? 'O endereço não existe ou o registro foi removido.' : 'Tente novamente em instantes.')">detalhe</p>
+    <p style="margin-top:18px"><a class="btn primary" th:href="@{/}">Voltar ao painel</a></p>
+  </section>
+</main>
+</body>
+</html>

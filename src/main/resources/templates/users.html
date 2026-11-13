@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Usuários')}"></head>
+<body>
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<div class="shell">
+  <aside th:replace="~{fragments/layout :: sidebar(${active})}"></aside>
+  <main class="main" id="conteudo">
+    <button class="btn small menu-toggle" type="button" aria-controls="sidebar"
+            onclick="document.getElementById('sidebar').classList.toggle('open')">☰ Menu</button>
+    <div class="page-head"><div><h1>Usuários</h1><p>Somente o gestor administra contas e perfis.</p></div></div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <section class="grid cols-2">
+      <article class="card">
+        <header><h2>Contas</h2></header>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Usuário</th><th>Nome</th><th>Perfil</th><th>Situação</th></tr></thead>
+            <tbody>
+              <tr th:each="u : ${list}">
+                <td class="mono" th:text="${u.username}">user</td>
+                <td th:text="${u.displayName}">Nome</td>
+                <td><span class="badge info plain" th:text="${u.role.label()}">Perfil</span></td>
+                <td><span class="badge" th:classappend="${u.active} ? 'ok' : 'plain'" th:text="${u.active} ? 'Ativo' : 'Inativo'">Ativo</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+      <article class="card">
+        <header><h2>Nova conta</h2></header>
+        <form class="stack" th:action="@{/users}" th:object="${form}" method="post" novalidate>
+          <div class="flash error" role="alert" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+          <label>Usuário
+            <input th:field="*{username}" autocomplete="off">
+            <span class="field-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
+          </label>
+          <label>Nome
+            <input th:field="*{displayName}">
+            <span class="field-error" th:if="${#fields.hasErrors('displayName')}" th:errors="*{displayName}"></span>
+          </label>
+          <label>Senha
+            <input type="password" th:field="*{password}" autocomplete="new-password">
+            <span class="field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+          </label>
+          <label>Perfil
+            <select th:field="*{role}"><option th:each="r : ${roles}" th:value="${r.name()}" th:text="${r.label()}"></option></select>
+          </label>
+          <div><button class="btn primary" type="submit">Criar conta</button></div>
+        </form>
+      </article>
+    </section>
+  </main>
+</div>
+</body>
+</html>

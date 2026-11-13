@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Serviços')}"></head>
+<body>
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<div class="shell">
+  <aside th:replace="~{fragments/layout :: sidebar(${active})}"></aside>
+  <main class="main" id="conteudo">
+    <button class="btn small menu-toggle" type="button" aria-controls="sidebar"
+            onclick="document.getElementById('sidebar').classList.toggle('open')">☰ Menu</button>
+    <div class="page-head">
+      <div>
+        <h1>Serviços e automação</h1>
+        <p>Monitoramento simulado: as falhas são injetadas de forma determinística, sem tocar em sistemas reais.</p>
+      </div>
+    </div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <section class="grid services" aria-label="Serviços monitorados">
+      <article class="card svc" th:each="s : ${services}">
+        <div class="row">
+          <h3 th:text="${s.name}">serviço</h3>
+          <span class="badge" th:classappend="${s.status.name() == 'HEALTHY'} ? 'ok' : (${s.status.name() == 'DEGRADED'} ? 'warn' : 'danger')" th:text="${s.status.label()}">Saudável</span>
+        </div>
+        <p class="muted" th:text="${s.description}">descrição</p>
+        <div class="lat" th:if="${!s.recentLatencies.isEmpty()}" th:with="maxLat=${@fmt.maxOf(s.recentLatencies)}" role="img" th:aria-label="'Latência recente de ' + ${s.name}"><i th:each="l : ${s.recentLatencies}" th:style="|height:${@fmt.barPercent(l, maxLat)}%|" th:title="${l} + ' ms'"></i></div>
+        <div class="dots" th:if="${!s.recentOk.isEmpty()}" aria-hidden="true"><i th:each="ok : ${s.recentOk}" th:classappend="${!ok} ? 'bad'"></i></div>
+        <div class="row">
+          <small class="muted" th:text="'Criticidade ' + ${s.criticality.label()} + ' · limite ' + ${s.failureThreshold} + ' falhas'">—</small>
+          <small class="muted" th:text="'Última checagem ' + ${@fmt.ago(s.lastCheckAt)}">—</small>
+        </div>
+        <p th:if="${s.openIncidentId != null}"><a th:href="@{/tickets/{id}(id=${s.openIncidentId})}" th:text="'Incidente #' + ${s.openIncidentId} + ' em aberto'">incidente</a></p>
+        <div th:if="${me.canSimulate}" class="inline">
+          <form class="inline" th:action="@{/services/{id}/simulate(id=${s.id})}" method="post">
+            <select name="fault" aria-label="Tipo de falha" style="width:auto">
+              <option th:each="f : ${faults}" th:value="${f.name()}" th:text="${f.label()}"></option>
+            </select>
+            <button class="btn small danger" type="submit">Simular falha</button>
+          </form>
+          <form class="inline" th:action="@{/services/{id}/check(id=${s.id})}" method="post">
+            <button class="btn small" type="submit">Verificar agora</button>
+          </form>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid cols-2" style="margin-top:16px">
+      <article class="card">
+        <header><h2>Runbooks cadastrados</h2></header>
+        <div class="hbars">
+          <div th:each="r : ${runbooks}">
+            <b th:text="${r.name}">Reiniciar</b> <span class="badge info plain" th:text="'até ' + ${r.maxAttempts} + ' tentativa(s)'">2</span>
+            <p class="muted" th:text="${r.description}">descrição</p>
+          </div>
+        </div>
+      </article>
+      <article class="card">
+        <header><h2>Últimas execuções</h2></header>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Quando</th><th>Runbook</th><th>Resultado</th><th>Chamado</th></tr></thead>
+            <tbody>
+              <tr th:each="x : ${executions}">
+                <td class="muted" th:text="${@fmt.dateTime(x.at)}">—</td>
+                <td><span th:text="${x.runbook}">—</span> <small class="muted" th:text="'#' + ${x.attempt}">#1</small></td>
+                <td><span class="badge" th:classappend="${x.success} ? 'ok' : 'danger'" th:text="${x.success} ? 'Sucesso' : 'Falhou'">—</span></td>
+                <td><a th:href="@{/tickets/{id}(id=${x.ticketId})}" th:text="'#' + ${x.ticketId}">#1</a></td>
+              </tr>
+              <tr th:if="${executions.isEmpty()}"><td colspan="4" class="empty">Nenhuma execução ainda.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </main>
+</div>
+</body>
+</html>

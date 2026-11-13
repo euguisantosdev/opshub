@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Chamado #' + ${t.id})}"></head>
+<body>
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<div class="shell">
+  <aside th:replace="~{fragments/layout :: sidebar(${active})}"></aside>
+  <main class="main" id="conteudo">
+    <button class="btn small menu-toggle" type="button" aria-controls="sidebar"
+            onclick="document.getElementById('sidebar').classList.toggle('open')">☰ Menu</button>
+    <div class="page-head">
+      <div>
+        <p><a th:href="@{/tickets}">← Chamados</a></p>
+        <h1><span class="muted num" th:text="'#' + ${t.id}">#1</span> <span th:text="${t.title}">Título</span></h1>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span th:replace="~{fragments/layout :: statusBadge(${t.status})}"></span>
+        <span th:replace="~{fragments/layout :: priorityBadge(${t.priority})}"></span>
+        <span class="badge info plain" th:text="'Nível ' + ${t.level}">N1</span>
+      </div>
+    </div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <div class="grid detail">
+      <div class="grid">
+        <article class="card">
+          <header><h2>Descrição</h2></header>
+          <div class="desc" th:if="${t.description != null and !t.description.isBlank()}" th:text="${t.description}"></div>
+          <p class="muted" th:if="${t.description == null or t.description.isBlank()}">Sem descrição.</p>
+          <div th:if="${t.rootCause != null}">
+            <h2 style="margin-bottom:6px">Causa raiz</h2>
+            <div class="desc" th:text="${t.rootCause}"></div>
+          </div>
+        </article>
+        <article class="card">
+          <header><h2>Histórico</h2></header>
+          <ol class="timeline">
+            <li th:each="e : ${events}" th:class="${e.kind.name()}">
+              <b th:text="${e.kind.label()}">Aberto</b> <span class="muted">por</span> <span th:text="${e.actor}">ator</span>
+              <div class="when" th:text="${@fmt.fullDateTime(e.at)}">data</div>
+              <div th:if="${e.note != null and !e.note.isBlank()}" th:text="${e.note}" style="margin-top:4px"></div>
+            </li>
+          </ol>
+        </article>
+      </div>
+
+      <div class="grid">
+        <article class="card">
+          <header><h2>SLA</h2></header>
+          <div th:replace="~{fragments/layout :: slaCell(${t.sla}, ${t.status.name() == 'RESOLVIDO'})}"></div>
+          <p class="muted" style="margin-top:8px;font-size:.82rem" th:text="'Prazo total: ' + ${@fmt.duration(t.sla.totalSeconds)} + ' · ' + ${t.sla.state.label()}">—</p>
+          <dl class="meta" style="margin-top:16px">
+            <dt>Solicitante</dt><dd th:text="${t.requester}">—</dd>
+            <dt>Responsável</dt><dd th:text="${t.assignee != null} ? ${t.assignee} : '—'">—</dd>
+            <dt>Categoria</dt><dd th:text="${t.category.label()}">—</dd>
+            <dt>Origem</dt><dd th:text="${t.origin.name() == 'MANUAL'} ? 'Manual' : 'Detecção automática'">—</dd>
+            <dt th:if="${t.serviceName != null}">Serviço</dt><dd th:if="${t.serviceName != null}" th:text="${t.serviceName}">—</dd>
+            <dt>Aberto em</dt><dd th:text="${@fmt.fullDateTime(t.createdAt)}">—</dd>
+            <dt th:if="${t.resolvedAt != null}">Resolvido em</dt><dd th:if="${t.resolvedAt != null}" th:text="${@fmt.fullDateTime(t.resolvedAt)}">—</dd>
+          </dl>
+        </article>
+
+        <article class="card actions" th:if="${!nextStatuses.isEmpty() or canEscalate}">
+          <header><h2>Ações</h2></header>
+          <form th:each="s : ${nextStatuses}" th:action="@{/tickets/{id}/transition(id=${t.id})}" method="post">
+            <input type="hidden" name="to" th:value="${s.name()}">
+            <input type="hidden" name="version" th:value="${t.version}">
+            <label th:if="${s.name() == 'RESOLVIDO'}">Causa raiz
+              <input name="rootCause" maxlength="2000" placeholder="Ex.: limite de conexões do banco">
+            </label>
+            <label>Observação
+              <input name="note" maxlength="2000" th:required="${s.name() == 'RESOLVIDO' or s.name() == 'AGUARDANDO'}">
+            </label>
+            <button class="btn" th:classappend="${s.name() == 'RESOLVIDO'} ? 'primary'" type="submit" th:text="'Marcar como ' + ${s.label()}">Ação</button>
+          </form>
+          <form th:if="${canEscalate}" th:action="@{/tickets/{id}/escalate(id=${t.id})}" method="post">
+            <input type="hidden" name="version" th:value="${t.version}">
+            <label>Evidência para escalar ao N2 <input name="note" required maxlength="2000" placeholder="O que já foi tentado?"></label>
+            <button class="btn" type="submit">Escalar ao N2</button>
+          </form>
+        </article>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

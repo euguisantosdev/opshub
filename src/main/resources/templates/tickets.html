@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Chamados')}"></head>
+<body>
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<div class="shell">
+  <aside th:replace="~{fragments/layout :: sidebar(${active})}"></aside>
+  <main class="main" id="conteudo">
+    <button class="btn small menu-toggle" type="button" aria-controls="sidebar"
+            onclick="document.getElementById('sidebar').classList.toggle('open')">☰ Menu</button>
+    <div class="page-head">
+      <div>
+        <h1>Chamados</h1>
+        <p>Filtre por status, prioridade, nível ou origem. Os resolvidos aparecem por último.</p>
+      </div>
+      <a class="btn primary" th:href="@{/tickets/new}">+ Novo chamado</a>
+    </div>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <section class="card">
+      <form class="filters" th:action="@{/tickets}" method="get"
+            hx-get="/tickets" hx-target="#results" hx-swap="outerHTML" hx-push-url="true" hx-trigger="input changed delay:300ms from:#q, change from:select">
+        <label>Buscar
+          <input id="q" name="q" type="search" placeholder="Título ou descrição" th:value="${f.q}">
+        </label>
+        <label>Status
+          <select name="status"><option value="">Todos</option>
+            <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label()}" th:selected="${s == f.status}"></option></select>
+        </label>
+        <label>Prioridade
+          <select name="priority"><option value="">Todas</option>
+            <option th:each="p : ${priorities}" th:value="${p.name()}" th:text="${p.label()}" th:selected="${p == f.priority}"></option></select>
+        </label>
+        <label>Nível
+          <select name="level"><option value="">Todos</option>
+            <option th:each="l : ${levels}" th:value="${l.name()}" th:text="${l.name()}" th:selected="${l == f.level}"></option></select>
+        </label>
+        <label>Origem
+          <select name="origin"><option value="">Todas</option>
+            <option th:each="o : ${origins}" th:value="${o.name()}" th:text="${o.name() == 'MANUAL'} ? 'Manual' : 'Automática'" th:selected="${o == f.origin}"></option></select>
+        </label>
+        <noscript><button class="btn" type="submit">Filtrar</button></noscript>
+      </form>
+
+      <div id="results" aria-live="polite" th:fragment="results">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Título</th><th>Prioridade</th><th>Status</th><th>Nível</th><th>Responsável</th><th>SLA</th><th>Aberto</th></tr></thead>
+            <tbody>
+              <tr th:each="t : ${result.content}">
+                <td class="num muted" th:text="${t.id}">1</td>
+                <td class="title"><a th:href="@{/tickets/{id}(id=${t.id})}" th:text="${t.title}">Título</a>
+                  <span class="badge info plain" th:if="${t.origin.name() == 'AUTOMATICO'}" title="Detectado pelo monitoramento">auto</span>
+                  <br><small th:text="${t.requester} + (${t.serviceName} != null ? ' · ' + ${t.serviceName} : '')">solicitante</small></td>
+                <td><span th:replace="~{fragments/layout :: priorityBadge(${t.priority})}"></span></td>
+                <td><span th:replace="~{fragments/layout :: statusBadge(${t.status})}"></span></td>
+                <td th:text="${t.level}">N1</td>
+                <td th:text="${t.assignee != null} ? ${t.assignee} : '—'">—</td>
+                <td><div th:replace="~{fragments/layout :: slaCell(${t.sla}, ${t.status.name() == 'RESOLVIDO'})}"></div></td>
+                <td class="muted" th:text="${@fmt.dateTime(t.createdAt)}">01/01</td>
+              </tr>
+              <tr th:if="${result.content.isEmpty()}"><td colspan="8" class="empty">Nenhum chamado encontrado com esses filtros.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <span th:text="${result.totalElements} + ' chamado(s) · página ' + (${result.page} + 1) + ' de ' + ${result.totalPages > 0 ? result.totalPages : 1}">0</span>
+          <span class="btns">
+            <a class="btn small" th:if="${result.page > 0}" th:href="@{/tickets(page=${result.page - 1})} + ${f.query()}"
+               hx-boost="false">← Anterior</a>
+            <a class="btn small" th:if="${result.page + 1 < result.totalPages}" th:href="@{/tickets(page=${result.page + 1})} + ${f.query()}"
+               hx-boost="false">Próxima →</a>
+          </span>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

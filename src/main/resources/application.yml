@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: opshub
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/opshub}
+    username: ${DB_USER:opshub}
+    password: ${DB_PASSWORD:opshub}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  thymeleaf:
+    cache: false
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+  error:
+    include-message: never
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+app:
+  security:
+    # Segredo HS256 do JWT (mínimo de 32 caracteres). Se vazio, um segredo aleatório é gerado a cada inicialização
+    # (os tokens deixam de valer após reiniciar). Em qualquer ambiente real, defina JWT_SECRET.
+    jwt-secret: ${JWT_SECRET:}
+    jwt-ttl-minutes: ${JWT_TTL_MINUTES:60}
+  bootstrap:
+    # Cria um gestor inicial apenas se ainda não existir nenhum usuário humano. Sem valor padrão de senha.
+    admin-username: ${BOOTSTRAP_ADMIN_USERNAME:}
+    admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+  monitoring:
+    enabled: ${MONITORING_ENABLED:true}
+    interval-ms: ${MONITORING_INTERVAL_MS:30000}
+  demo:
+    # Perfil "demo": carrega dados fictícios. A senha dos usuários de demonstração vem desta variável.
+    password: ${OPSHUB_DEMO_PASSWORD:}

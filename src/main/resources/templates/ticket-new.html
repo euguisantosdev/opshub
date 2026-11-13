@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Novo chamado')}"></head>
+<body>
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<div class="shell">
+  <aside th:replace="~{fragments/layout :: sidebar(${active})}"></aside>
+  <main class="main" id="conteudo">
+    <button class="btn small menu-toggle" type="button" aria-controls="sidebar"
+            onclick="document.getElementById('sidebar').classList.toggle('open')">☰ Menu</button>
+    <div class="page-head">
+      <div><h1>Novo chamado</h1><p>O prazo de SLA começa a contar na abertura e depende da prioridade.</p></div>
+    </div>
+    <section class="card">
+      <form class="stack" th:action="@{/tickets}" th:object="${form}" method="post" novalidate>
+        <div class="flash error" role="alert" th:if="${#fields.hasGlobalErrors()}" th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+        <label>Título
+          <input th:field="*{title}" maxlength="160" required>
+          <span class="field-error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></span>
+        </label>
+        <label>Descrição
+          <textarea th:field="*{description}" maxlength="4000" placeholder="O que aconteceu? Quando começou? Qual o impacto?"></textarea>
+          <span class="field-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
+        </label>
+        <div class="form-row">
+          <label>Categoria
+            <select th:field="*{category}"><option th:each="c : ${categories}" th:value="${c.name()}" th:text="${c.label()}"></option></select>
+          </label>
+          <label>Prioridade
+            <select th:field="*{priority}"><option th:each="p : ${priorities}" th:value="${p.name()}" th:text="${p.label()}"></option></select>
+          </label>
+        </div>
+        <label th:if="${!services.isEmpty()}">Serviço afetado (opcional)
+          <select th:field="*{serviceId}"><option value="">Nenhum</option>
+            <option th:each="s : ${services}" th:value="${s.id}" th:text="${s.name}"></option></select>
+        </label>
+        <div style="display:flex;gap:10px">
+          <button class="btn primary" type="submit">Abrir chamado</button>
+          <a class="btn" th:href="@{/tickets}">Cancelar</a>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>
+</body>
+</html>

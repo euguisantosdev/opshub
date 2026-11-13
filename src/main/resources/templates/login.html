@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Entrar')}"></head>
+<body>
+<main class="login" id="conteudo">
+  <section class="card panel">
+    <div class="brand"><img th:src="@{/images/logo.svg}" alt="" width="34" height="34">OpsHub</div>
+    <p class="tag">Service desk com SLA, monitoramento e automação de incidentes.</p>
+    <div class="flash error" role="alert" th:if="${param.error}">Usuário ou senha inválidos.</div>
+    <div class="flash ok" role="status" th:if="${param.logout}">Sessão encerrada.</div>
+    <form class="stack" th:action="@{/login}" method="post" style="max-width:none">
+      <label>Usuário
+        <input name="username" autocomplete="username" required autofocus>
+      </label>
+      <label>Senha
+        <input name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn primary" type="submit" style="justify-content:center">Entrar</button>
+    </form>
+    <p class="demo-note">Projeto de portfólio com dados fictícios. Contas de demonstração são criadas apenas no perfil <code>demo</code>.</p>
+  </section>
+</main>
+</body>
+</html>

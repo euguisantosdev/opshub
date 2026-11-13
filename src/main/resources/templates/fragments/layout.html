@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title th:text="${title} + ' · OpsHub'">OpsHub</title>
+  <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+  <script th:src="@{/js/htmx.min.js}" defer></script>
+</head>
+<body>
+<aside th:fragment="sidebar(active)" class="sidebar" id="sidebar" aria-label="Navegação principal">
+  <a class="brand" th:href="@{/}"><img th:src="@{/images/logo.svg}" alt="" width="30" height="30">OpsHub</a>
+  <nav class="nav">
+    <a th:href="@{/}" th:aria-current="${active == 'dashboard'} ? 'page'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Painel</a>
+    <a th:href="@{/tickets}" th:aria-current="${active == 'tickets'} ? 'page'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4z"/><path d="M13 5v14" stroke-dasharray="2 3"/></svg>
+      Chamados</a>
+    <a th:if="${me != null and me.analyst}" th:href="@{/services}" th:aria-current="${active == 'services'} ? 'page'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+      Serviços e automação</a>
+    <a th:if="${me != null and me.manager}" th:href="@{/users}" th:aria-current="${active == 'users'} ? 'page'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M17 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/></svg>
+      Usuários</a>
+  </nav>
+  <div class="sidebar-foot" th:if="${me != null}">
+    <div class="user">
+      <span class="avatar" th:text="${me.initials}" aria-hidden="true">GS</span>
+      <span><b th:text="${me.displayName}">Nome</b><small th:text="${me.roleLabel}">Perfil</small></span>
+    </div>
+    <form th:action="@{/logout}" method="post"><button class="btn small" type="submit" style="width:100%;justify-content:center">Sair</button></form>
+  </div>
+</aside>
+<div th:fragment="flash" th:remove="tag">
+  <div class="flash ok" role="status" th:if="${flashOk}" th:text="${flashOk}"></div>
+  <div class="flash error" role="alert" th:if="${flashError}" th:text="${flashError}"></div>
+</div>
+<span th:fragment="priorityBadge(p)" class="badge"
+      th:classappend="${p.name() == 'CRITICA'} ? 'danger' : (${p.name() == 'ALTA'} ? 'warn' : (${p.name() == 'MEDIA'} ? 'info' : 'plain'))"
+      th:text="${p.label()}">Alta</span>
+<span th:fragment="statusBadge(s)" class="badge"
+      th:classappend="${s.name() == 'RESOLVIDO'} ? 'ok' : (${s.name() == 'AGUARDANDO'} ? 'warn' : (${s.name() == 'ATENDIMENTO'} ? 'info' : 'plain'))"
+      th:text="${s.label()}">Novo</span>
+<div th:fragment="slaCell(sla, resolved)" class="sla">
+  <div class="bar" th:classappend="${sla.state.name() == 'RISCO'} ? 'risco' : (${sla.state.name() == 'ESTOURADO'} ? 'estourado' : '')"
+       role="progressbar" aria-valuemin="0" aria-valuemax="100" th:aria-valuenow="${sla.consumedPercent()}"
+       th:aria-label="'SLA: ' + ${sla.state.label()}"><span th:style="'width:' + ${sla.consumedPercent()} + '%'"></span></div>
+  <small th:if="${resolved}" th:text="${sla.state.name() == 'ESTOURADO'} ? 'Resolvido fora do prazo' : 'Resolvido no prazo'">—</small>
+  <small th:unless="${resolved}"
+         th:text="${sla.remainingSeconds >= 0} ? (${sla.running} ? 'Restam ' + ${@fmt.duration(sla.remainingSeconds)} : 'Pausado · restam ' + ${@fmt.duration(sla.remainingSeconds)}) : 'Estourado há ' + ${@fmt.duration(-sla.remainingSeconds)}">—</small>
+</div>
+</body>
+</html>
